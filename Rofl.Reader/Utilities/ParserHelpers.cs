@@ -16,7 +16,7 @@ namespace Rofl.Reader.Utilities
             }
             catch (Exception ex)
             {
-                throw new IOException(logLocation + " - " + ex.Message);
+                throw new IOException($"{logLocation} - {ex.Message}");
             }
         }
 
@@ -29,7 +29,7 @@ namespace Rofl.Reader.Utilities
             }
             catch (Exception ex)
             {
-                throw new IOException(logLocation + " - " + ex.Message);
+                throw new IOException($"{logLocation} - {ex.Message}");
             }
         }
     }
