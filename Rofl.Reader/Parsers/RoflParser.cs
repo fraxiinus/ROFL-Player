@@ -16,61 +16,53 @@ namespace Rofl.Reader.Parsers
     {
         private readonly string exceptionOriginName = "RoflParser";
         private readonly byte[] _magicNumbers = new byte[] { 0x52, 0x49, 0x4F, 0x54 };
+        private const int lengthFieldOffset = 262;
+        private const int lenghtFieldByteSize = 26;
+        private LengthFields lenghtFields;
 
         public async Task<ReplayHeader> ReadReplayAsync(FileStream fileStream)
         {
             CheckFileStreamCanRead(fileStream);
             await CheckFileIsRoflAsync(fileStream);
 
-            // Read and deserialize length fields
-            byte[] lengthFieldBuffer = new byte[26];
-            try
-            {
-                fileStream.Seek(262, SeekOrigin.Begin);
-                await fileStream.ReadAsync(lengthFieldBuffer, 0, 26);
+            // LengthFields
+            byte[] lengthFieldBuffer;
+            try {
+                lengthFieldBuffer = await Read(fileStream, lengthFieldOffset, lenghtFieldByteSize);
             }
             catch (Exception ex)
             {
-                throw new IOException($"{exceptionOriginName} - Reading Length Header: " + ex.Message);
+                throw new IOException($"{exceptionOriginName} - Reading Lenght Header: ${ex.Message}");
             }
+            lenghtFields = ParseLengthFields(lengthFieldBuffer);
 
-            var replayLengthFields = ParseLengthFields(lengthFieldBuffer);
-
-
-            // Read and deserialize metadata
-            byte[] metadataBuffer = new byte[replayLengthFields.MetadataLength];
-            try
-            {
-                fileStream.Seek(replayLengthFields.MetadataOffset, SeekOrigin.Begin);
-                await fileStream.ReadAsync(metadataBuffer, 0, (int)replayLengthFields.MetadataLength);
+            // Metadata
+            byte[] metadataBuffer;
+            try {
+                metadataBuffer = await Read(fileStream, (int)lenghtFields.MetadataOffset, (int)lenghtFields.MetadataLength);
             }
             catch (Exception ex)
             {
-                throw new IOException($"{exceptionOriginName} - Reading JSON Metadata: " + ex.Message);
+                throw new IOException($"{exceptionOriginName} - Reading JSON Metadata: ${ex.Message}");
             }
+            var matchMetadata = ParseMetadata(metadataBuffer);
 
-            var replayMatchMetadata = ParseMetadata(metadataBuffer);
-
-
-            // Read and deserialize payload fields
-            byte[] payloadFieldBuffer = new byte[replayLengthFields.PayloadHeaderLength];
-            try
-            {
-                fileStream.Seek(replayLengthFields.PayloadHeaderOffset, SeekOrigin.Begin);
-                await fileStream.ReadAsync(payloadFieldBuffer, 0, (int)replayLengthFields.PayloadHeaderLength);
+            // PayloadFields
+            byte[] payloadFieldBuffer;
+            try {
+                payloadFieldBuffer = await Read(fileStream, (int)lenghtFields.PayloadHeaderOffset, (int)lenghtFields.PayloadHeaderLength);
             }
             catch (Exception ex)
             {
-                throw new IOException($"{exceptionOriginName} - Reading Match Header: " + ex.Message);
+                throw new IOException($"{exceptionOriginName} - Reading Match Header: ${ex.Message}");
             }
-
-            var replayPayloadFields = ParseMatchHeader(payloadFieldBuffer);
+            var payloadFields = ParseMatchHeader(payloadFieldBuffer);
 
             return new ReplayHeader
             {
-                LengthFields = replayLengthFields,
-                MatchMetadata = replayMatchMetadata,
-                PayloadFields = replayPayloadFields
+                LengthFields = lenghtFields,
+                MatchMetadata = matchMetadata,
+                PayloadFields = payloadFields
             };
         }
 
@@ -98,6 +90,13 @@ namespace Rofl.Reader.Parsers
             {
                 throw new IOException($"{exceptionOriginName} - Reading Magic Number: " + ex.Message);
             }
+        }
+
+        private async Task<byte[]> Read(FileStream fs, int offset, int count) {
+            byte[] buffer = new byte[count];
+            fs.Seek(offset, SeekOrigin.Begin);
+            await fs.ReadAsync(buffer, 0, count);
+            return buffer;
         }
 
         private static PayloadFields ParseMatchHeader(byte[] bytedata)
