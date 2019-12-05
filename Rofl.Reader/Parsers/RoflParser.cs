@@ -19,26 +19,8 @@ namespace Rofl.Reader.Parsers
 
         public async Task<ReplayHeader> ReadReplayAsync(FileStream fileStream)
         {
-            if(!fileStream.CanRead)
-            {
-                throw new IOException($"{exceptionOriginName} - Stream does not support reading");
-            }
-
-            // Read and check Magic Numbers
-            byte[] magicbuffer = new byte[4];
-            try
-            {
-                await fileStream.ReadAsync(magicbuffer, 0, 4);
-                if (!magicbuffer.SequenceEqual(_magicNumbers))
-                {
-                    throw new Exception($"{exceptionOriginName} - Selected file is not in valid ROFL format");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new IOException($"{exceptionOriginName} - Reading Magic Number: " + ex.Message);
-            }
-
+            CheckFileStreamCanRead(fileStream);
+            await CheckFileIsRoflAsync(fileStream);
 
             // Read and deserialize length fields
             byte[] lengthFieldBuffer = new byte[26];
@@ -90,6 +72,32 @@ namespace Rofl.Reader.Parsers
                 MatchMetadata = replayMatchMetadata,
                 PayloadFields = replayPayloadFields
             };
+        }
+
+        private void CheckFileStreamCanRead(FileStream fs)
+        {
+            if(!fs.CanRead)
+            {
+                throw new IOException($"{exceptionOriginName} - Stream does not support reading");
+            }
+        }
+
+        private async Task CheckFileIsRoflAsync(FileStream fs)
+        {
+            // Read and check Magic Numbers
+            byte[] magicbuffer = new byte[4];
+            try
+            {
+                await fs.ReadAsync(magicbuffer, 0, 4);
+                if (!magicbuffer.SequenceEqual(_magicNumbers))
+                {
+                    throw new Exception($"{exceptionOriginName} - Selected file is not in valid ROFL format");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"{exceptionOriginName} - Reading Magic Number: " + ex.Message);
+            }
         }
 
         private static PayloadFields ParseMatchHeader(byte[] bytedata)
