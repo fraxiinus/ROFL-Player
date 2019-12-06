@@ -19,15 +19,7 @@ namespace Rofl.Reader
         /// <returns></returns>
         public async Task<ReplayFile> ReadFile(ReplayFile file)
         {
-            if (file == null || String.IsNullOrEmpty(file.Location) || String.IsNullOrEmpty(file.Name))
-            {
-                throw new ArgumentNullException($"{exceptionOriginName} - File reference is null");
-            }
-
-            if (!File.Exists(file.Location))
-            {
-                throw new FileNotFoundException($"{exceptionOriginName} - File path not found, does the file exist?");
-            }
+            CheckInput(file);
 
             IReplayParser parser = null;
             switch (file.Type)
@@ -58,6 +50,28 @@ namespace Rofl.Reader
             };
 
             return file;
+        }
+
+        private void CheckInput(ReplayFile file)
+        {
+            CheckFileReference(file);
+            CheckFileExistence(file);
+        }
+
+        private void CheckFileReference(ReplayFile file)
+        {
+            if (file == null || String.IsNullOrEmpty(file.Location) || String.IsNullOrEmpty(file.Name))
+            {
+                throw new ArgumentNullException($"{exceptionOriginName} - File reference is null");
+            }
+        }
+
+        private void CheckFileExistence(ReplayFile file)
+        {
+            if (!File.Exists(file.Location))
+            {
+                throw new FileNotFoundException($"{exceptionOriginName} - File path not found, does the file exist?");
+            }
         }
     }
 }
