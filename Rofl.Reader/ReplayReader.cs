@@ -21,15 +21,7 @@ namespace Rofl.Reader
         {
             CheckInput(file);
             file.Data = await ParseFile(file);
-
-            // Make some educated guesses
-            GameDetailsInferrer detailsInferrer = new GameDetailsInferrer();
-
-            file.Data.InferredData = new InferredData()
-            {
-                MapID = detailsInferrer.InferMap(file.Data.MatchMetadata)
-            };
-
+            file.Data.InferredData = InferData(file);
             return file;
         }
 
@@ -82,6 +74,20 @@ namespace Rofl.Reader
                     throw new Exception($"{exceptionOriginName} - Unknown replay file type");
             }
             return parser;
+        }
+
+        private InferredData InferData(ReplayFile file)
+        {
+            return new InferredData()
+            {
+                MapID = InferMap(file.Data.MatchMetadata)
+            };
+        }
+
+        private Map InferMap(MatchMetadata metadata)
+        {
+            GameDetailsInferrer detailsInferrer = new GameDetailsInferrer();
+            return detailsInferrer.InferMap(metadata)
         }
     }
 }
