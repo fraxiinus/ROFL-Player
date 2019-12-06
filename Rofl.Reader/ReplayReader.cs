@@ -29,17 +29,24 @@ namespace Rofl.Reader
                 throw new FileNotFoundException($"{exceptionOriginName} - File path not found, does the file exist?");
             }
 
+            IReplayParser parser = null;
             switch (file.Type)
             {
                 case REPLAYTYPES.ROFL:
-                    file.Data = await ReadROFL(file.Location);
+                    parser = new RoflParser();
                     break;
                 case REPLAYTYPES.LRF:
-                    file.Data = await ReadLRF(file.Location);
+                    parser = new LrfParser();
                     break;
                 case REPLAYTYPES.LPR:
-                    file.Data = await ReadLPR(file.Location);
+                    parser = new LprParser();
                     break;
+                default:
+                    throw new Exception($"{exceptionOriginName} - Unknown replay file type");
+            }
+
+            using (FileStream fs = new FileStream(file.Location, FileMode.Open)) {
+                file.Data = await parser.ReadReplayAsync(fs);
             }
 
             // Make some educated guesses
@@ -51,36 +58,6 @@ namespace Rofl.Reader
             };
 
             return file;
-        }
-
-        public async Task<ReplayHeader> ReadROFL(string filePath)
-        {
-            var roflParser = new RoflParser();
-
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
-            {
-                return await roflParser.ReadReplayAsync(fileStream);
-            }
-        }
-
-        public async Task<ReplayHeader> ReadLRF(string filePath)
-        {
-            var lrfParser = new LrfParser();
-
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
-            {
-                return await lrfParser.ReadReplayAsync(fileStream);
-            }
-        }
-
-        public async Task<ReplayHeader> ReadLPR(string filePath)
-        {
-            var lprParser = new LprParser();
-
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
-            {
-                return await lprParser.ReadReplayAsync(fileStream);
-            }
         }
     }
 }
