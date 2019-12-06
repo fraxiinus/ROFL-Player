@@ -20,26 +20,7 @@ namespace Rofl.Reader
         public async Task<ReplayFile> ReadFile(ReplayFile file)
         {
             CheckInput(file);
-
-            IReplayParser parser = null;
-            switch (file.Type)
-            {
-                case REPLAYTYPES.ROFL:
-                    parser = new RoflParser();
-                    break;
-                case REPLAYTYPES.LRF:
-                    parser = new LrfParser();
-                    break;
-                case REPLAYTYPES.LPR:
-                    parser = new LprParser();
-                    break;
-                default:
-                    throw new Exception($"{exceptionOriginName} - Unknown replay file type");
-            }
-
-            using (FileStream fs = new FileStream(file.Location, FileMode.Open)) {
-                file.Data = await parser.ReadReplayAsync(fs);
-            }
+            file.Data = await ParseFile(file);
 
             // Make some educated guesses
             GameDetailsInferrer detailsInferrer = new GameDetailsInferrer();
@@ -72,6 +53,35 @@ namespace Rofl.Reader
             {
                 throw new FileNotFoundException($"{exceptionOriginName} - File path not found, does the file exist?");
             }
+        }
+
+        private async Task<ReplayHeader> ParseFile(ReplayFile file)
+        {
+            IReplayParser parser = SelectParser(file);
+            using (FileStream fs = new FileStream(file.Location, FileMode.Open))
+            {
+                return await parser.ReadReplayAsync(fs);
+            }
+        }
+
+        private IReplayParser SelectParser(ReplayFile file)
+        {
+            IReplayParser parser = null;
+            switch (file.Type)
+            {
+                case REPLAYTYPES.ROFL:
+                    parser = new RoflParser();
+                    break;
+                case REPLAYTYPES.LRF:
+                    parser = new LrfParser();
+                    break;
+                case REPLAYTYPES.LPR:
+                    parser = new LprParser();
+                    break;
+                default:
+                    throw new Exception($"{exceptionOriginName} - Unknown replay file type");
+            }
+            return parser;
         }
     }
 }
