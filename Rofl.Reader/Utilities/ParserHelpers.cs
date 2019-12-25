@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Rofl.Reader.Utilities
@@ -16,7 +14,7 @@ namespace Rofl.Reader.Utilities
             }
             catch (Exception ex)
             {
-                throw new IOException(logLocation + " - " + ex.Message);
+                throw new IOException($"{logLocation} - {ex.Message}");
             }
         }
 
@@ -29,7 +27,7 @@ namespace Rofl.Reader.Utilities
             }
             catch (Exception ex)
             {
-                throw new IOException(logLocation + " - " + ex.Message);
+                throw new IOException($"{logLocation} - {ex.Message}");
             }
         }
     }

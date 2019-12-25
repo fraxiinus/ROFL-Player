@@ -7,37 +7,48 @@ namespace Rofl.Reader.Utilities
     {
         public Map InferMap(MatchMetadata matchMetadata)
         {
-            // Check if any players have killed jungle creeps, Rules out HowlingAbyss
-            var JungleCheck = (from player in matchMetadata.AllPlayers
-                               where int.Parse(player["NEUTRAL_MINIONS_KILLED"]) > 0
-                               select player);
-
-            // Check if any players have placed wards, Rules out TwistedTreeline and HowlingAbyss
-            var WardCheck = (from player in matchMetadata.AllPlayers
-                             where int.Parse(player["WARD_PLACED"]) > 0
-                             select player);
-
-            // Double check between TwistedTreeline and SummonersRift
-            var DragonCheck = (from player in matchMetadata.AllPlayers
-                               where int.Parse(player["DRAGON_KILLS"]) > 0
-                               select player);
-
-            if (JungleCheck.Count() > 0)
+            Map inferredMap;
+            if (!HasJungle(matchMetadata))
             {
-                if (WardCheck.Count() == 0 && DragonCheck.Count() == 0)
-                {
-                    return Map.TwistedTreeline;
-                }
-                else
-                {
-                    return Map.SummonersRift;
-                }
-
-            }
-            else
+                inferredMap = Map.HowlingAbyss;
+            } else if (!HasWards(matchMetadata) && !HasDragon(matchMetadata))
             {
-                return Map.HowlingAbyss;
+                inferredMap = Map.TwistedTreeline;
+            } else
+            {
+                inferredMap = Map.SummonersRift;
             }
+            return inferredMap;
+        }
+
+        // check if any players have killed jungle creeps, rules out HowlingAbyss
+        private bool HasJungle(MatchMetadata metadata)
+        {
+            return (
+                from player in metadata.AllPlayers
+                where int.Parse(player["NEUTRAL_MINIONS_KILLED"]) > 0
+                select player
+            ).Count() > 0;
+        } 
+
+        // check if any players have placed wards, rules out TwistedTreeline and HowlingAbyss
+        private bool HasWards(MatchMetadata metadata)
+        {
+            return (
+                from player in metadata.AllPlayers
+                where int.Parse(player["WARDS_PLACED"]) > 0
+                select player
+            ).Count() > 0;
+        }
+
+        // check if any player has killed a dragon, SummonersRift only
+        private bool HasDragon(MatchMetadata metadata)
+        {
+            return (
+                from player in metadata.AllPlayers
+                where int.Parse(player["DRAGON_KILLS"]) > 0
+                select player
+            ).Count() > 0;
         }
     }
 }
