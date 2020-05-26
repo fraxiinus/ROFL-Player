@@ -87,7 +87,7 @@ namespace Rofl.Reader
         private Map InferMap(MatchMetadata metadata)
         {
             GameDetailsInferrer detailsInferrer = new GameDetailsInferrer();
-            return detailsInferrer.InferMap(metadata)
+            return detailsInferrer.InferMap(metadata);
         }
     }
 }
