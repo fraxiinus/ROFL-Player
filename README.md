@@ -6,7 +6,9 @@
 
 ROFLPlayer is a simple Windows program for viewing and playing replay files from League of Legends.
 
-**[Download ROFLPlayer](https://github.com/andrew1421lee/ROFL-Player/releases)**
+## This project is no longer being updated for the time being. Get the replacement: [ReplayBook](https://github.com/fraxiinus/ReplayBook)
+
+**[Download Legacy ROFLPlayer](https://github.com/andrew1421lee/ROFL-Player/releases)**
 
 ![Screenshot](https://i.imgur.com/vW562kM.png)
 
